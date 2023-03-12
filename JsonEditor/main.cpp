@@ -16,50 +16,50 @@ int main()
 	JsonEditor jsonEditor;
 	jsonEditor.LoadSetting();
 	jsonEditor.UpdateJsonList();
-	//jsonEditor.OpenJsonFile(0);
 
+	State lastState = selectFile;
 	State state = selectFile;
-	int selectedNumber;
+	int lastSelectedNumber = 0;
+	int selectedNumber = 0;
+	int minSelected = 0;
+	int maxSelected = 0;
 
 	while (true)
 	{
+		bool isChanged = false;
+
+		static bool isFirstLoop = true;
+		if (isFirstLoop)
+		{
+			isChanged = true;
+		}
+
+		// input
 		switch (state)
 		{
 			case selectFile:
-				system("cls");
-
-				jsonEditor.UpdateJsonList();
-				jsonEditor.ShowJsonList();
-				cout << "원하는 파일의 번호를 입력하세요: ";
-				cin >> selectedNumber;
-
-				system("cls");
-				if (jsonEditor.OpenJsonFile(selectedNumber))
+				if (GetAsyncKeyState(VK_UP) & 0x0001)
 				{
-					cout << '\n' << "ESC를 누르면 종료합니다." << '\n';
+					selectedNumber = selectedNumber - 1;
+				}
+				if (GetAsyncKeyState(VK_DOWN) & 0x0001)
+				{
+					selectedNumber = selectedNumber + 1;
+				}
+
+				if (GetAsyncKeyState(VK_SPACE) & 0x0001)
+				{
 					state = opened;
 				}
 
 				break;
 
 			case opened:
-				if (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+				if (GetAsyncKeyState(VK_SPACE) & 0x0001)
 				{
+					lastSelectedNumber = 0;
+					selectedNumber = 0;
 					state = selectFile;
-				}
-
-				if (!jsonEditor.CheckLastestFile())
-				{
-					system("cls");
-					if (jsonEditor.OpenJsonFile(selectedNumber))
-					{
-						cout << '\n' << "ESC를 누르면 종료합니다." << '\n';
-						state = opened;
-					}
-					else
-					{
-						state = selectFile;
-					}
 				}
 				
 				break;
@@ -67,6 +67,74 @@ int main()
 			default:
 				break;
 		}
+
+		switch (state)
+		{
+		case selectFile:
+			if (!jsonEditor.CheckLastestDirectory())
+			{
+				isChanged = true;
+				jsonEditor.UpdateJsonList();
+			}
+
+			break;
+
+		case opened:
+			if (!jsonEditor.CheckLastestFile())
+			{
+				isChanged = true;
+				jsonEditor.UpdateJsonList();
+			}
+
+			break;
+
+		default:
+			break;
+		}
+
+		maxSelected = max (minSelected + jsonEditor.GetJsonListSize() - 1, minSelected);
+
+		// check state
+		if (lastState != state)
+		{
+			isChanged = true;
+		}
+		lastState = state;
+
+		// check selectedNumber
+		selectedNumber = max(selectedNumber, minSelected);
+		selectedNumber = min(selectedNumber, maxSelected);
+
+		if (lastSelectedNumber != selectedNumber)
+		{
+			isChanged = true;
+		}
+
+		lastSelectedNumber = selectedNumber;
+
+		// show
+		if (isChanged)
+		{
+			system("cls");
+
+			switch (state)
+			{
+			case selectFile:
+				jsonEditor.ShowJsonList(selectedNumber);
+
+				break;
+
+			case opened:
+				jsonEditor.OpenJsonFile(selectedNumber);
+
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		isFirstLoop = false;
 	}
 	
 
