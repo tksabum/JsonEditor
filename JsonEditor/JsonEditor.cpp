@@ -1,6 +1,6 @@
 #include "JsonEditor.h"
 
-const string JsonEditor::SETTING_FILE_DEFAULT = "setting_home.ini";
+const string JsonEditor::SETTING_FILE_DEFAULT = "setting.ini";
 
 //template <typename TP>
 //std::time_t to_time_t(TP tp)
@@ -175,7 +175,7 @@ bool JsonEditor::OpenJsonFile(int filenumber)
 
 bool JsonEditor::CheckLastestDirectory()
 {
-	return abs(file_time_to_milliseconds(dirLastChangedTime) - file_time_to_milliseconds(filesystem::last_write_time(directoryPath))) < 100;
+	return dirLastChangedTime == filesystem::last_write_time(directoryPath);
 }
 
 bool JsonEditor::CheckLastestFile()
